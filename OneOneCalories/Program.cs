@@ -12,7 +12,7 @@ foreach (string line in lines)
     }
     else
     {
-        elfCalorieCounter += Int32.Parse(line);
+        elfCalorieCounter += int.Parse(line);
     }
 }
 

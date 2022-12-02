@@ -15,15 +15,12 @@ var moveGuideDictionary = new Dictionary<string, RoundOutcome>()
     { "Z", RoundOutcome.PlayerWin },
 };
 
-string[] lines = File.ReadAllLines(@"dayTwo.txt");
-
 int totalPlayerScorePartOne = 0;
 int totalPlayerScorePartTwo = 0;
 
-foreach (var line in lines)
+foreach (var line in File.ReadAllLines(@"dayTwo.txt"))
 {
     var moves = line.Split(' ');
-
     totalPlayerScorePartOne += CalculateScore(moves[0], moves[1]);
     totalPlayerScorePartTwo += CalculatePredeterminedMoveScore(moves[0], moves[1]);
 }
@@ -75,30 +72,7 @@ RoundOutcome GetRoundOutcomeBetweenTwoShapes(Shape opponent, Shape player)
         return RoundOutcome.Draw;
 }
 
-class Shape
-{
-    public Shape(string name, string symbol, string opponentEquivalentSymbol, string winsOver, string losesFrom, int winScore)
-    {
-        Name = name;
-        Symbol = symbol;
-        OpponentEquivalentSymbol = opponentEquivalentSymbol;
-        WinsOver = winsOver;
-        LosesFrom = losesFrom;
-        WinScore = winScore;
-    }
-
-    public string Name { get; }
-
-    public string Symbol { get; }
-
-    public string OpponentEquivalentSymbol { get; }
-
-    public string WinsOver { get; }
-
-    public string LosesFrom { get; }
-
-    public int WinScore { get; }
-}
+record Shape(string Name, string Symbol, string OpponentEquivalentSymbol, string WinsOver, string LosesFrom, int WinScore);
 
 enum RoundOutcome
 {
