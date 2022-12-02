@@ -16,7 +16,7 @@
     <Content Include="testdata.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="dayTwo.txt">
+    <Content Include="daytwo.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
