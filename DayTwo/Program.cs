@@ -17,42 +17,37 @@ var moveGuideDictionary = new Dictionary<string, RoundOutcome>()
 
 string[] lines = File.ReadAllLines(@"dayTwo.txt");
 
-// Part One Solution
-PartOne(lines);
+int totalPlayerScorePartOne = 0;
+int totalPlayerScorePartTwo = 0;
 
-// Part Two solution
-PartOne(PartTwo(lines));
-
-Console.ReadLine();
-
-string[] PartTwo(string[] initialLines)
+foreach (var line in lines)
 {
-    var lines = new List<string>();
-    foreach (var line in initialLines)
-    {
-        var moves = line.Split(' ');
+    var moves = line.Split(' ');
 
-        if (moves.Length == 2)
-        {
-            var opponentMoveKey = moves[0];
-            var opponentMoveIsValid = moveDictionary.TryGetValue(opponentMoveKey, out var opponentMove);
+    var opponentMoveKey = moves[0];
+    var playerMoveKey = moves[1];
 
-            if (opponentMoveIsValid)
-            {
-                var playerMoveKey = moves[1];
-                var desiredOutcomeIsValid = moveGuideDictionary.TryGetValue(playerMoveKey, out var desiredOutcome);
+    var opponentMoveIsValid = moveDictionary.TryGetValue(opponentMoveKey, out var opponentMove);
+    var playerMoveIsValid = moveDictionary.TryGetValue(playerMoveKey, out var playerMove);
 
-                if (desiredOutcomeIsValid && opponentMove != null)
-                {
-                    var playerMove = ChooseShapeForOutcome(opponentMove, desiredOutcome);
-                    lines.Add($"{opponentMoveKey} {playerMove.Symbol}");
-                }
-            }
-        }
-    }
+    // Part One
+    var roundOutcome = GetRoundOutcomeBetweenTwoShapes(opponentMove, playerMove);
 
-    return lines.ToArray();
+    var roundScore = (int)roundOutcome + playerMove.WinScore;
+    totalPlayerScorePartOne += roundScore;
+
+    // Part Two
+    var desiredOutcomeIsValid = moveGuideDictionary.TryGetValue(playerMoveKey, out var desiredOutcome);
+
+    var playerCalculatedMove = ChooseShapeForOutcome(opponentMove, desiredOutcome);
+    var roundCalculatedOutcome = GetRoundOutcomeBetweenTwoShapes(opponentMove, playerCalculatedMove);
+    var roundCalculatedScore = (int)roundCalculatedOutcome + playerCalculatedMove.WinScore;
+    totalPlayerScorePartTwo += roundCalculatedScore;
 }
+
+Console.WriteLine($"Total Player Score Part One: {totalPlayerScorePartOne}");
+Console.WriteLine($"Total Player Score Part Two: {totalPlayerScorePartTwo}");
+Console.ReadLine();
 
 Shape ChooseShapeForOutcome(Shape opponentShape, RoundOutcome roundOutcome)
 {
@@ -67,41 +62,6 @@ Shape ChooseShapeForOutcome(Shape opponentShape, RoundOutcome roundOutcome)
         default:
             throw new InvalidDataException();
     }
-}
-
-void PartOne(string[] lines)
-{
-    int totalPlayerScore = 0;
-
-    foreach (var line in lines)
-    {
-        var moves = line.Split(' ');
-
-        if (moves.Length == 2)
-        {
-            var opponentMoveKey = moves[0];
-            var playerMoveKey = moves[1];
-
-            var opponentMoveIsValid = moveDictionary.TryGetValue(opponentMoveKey, out var opponentMove);
-            var playerMoveIsValid = moveDictionary.TryGetValue(playerMoveKey, out var playerMove);
-
-            if (opponentMoveIsValid && playerMoveIsValid && opponentMove != null && playerMove != null)
-            {
-                var roundOutcome = GetRoundOutcomeBetweenTwoShapes(opponentMove, playerMove);
-
-                var roundScore = (int)roundOutcome + playerMove.WinScore;
-                totalPlayerScore += roundScore;
-
-                Console.WriteLine($"(Opponent) {opponentMove.Name} - {playerMove.Name} (Player) -> {Enum.GetName(typeof(RoundOutcome), roundOutcome)} / + {roundScore} / Current Score: {totalPlayerScore}");
-            }
-            else
-            {
-                Console.WriteLine($"Invalid inputs. Opponent: {opponentMoveKey} - Player: {playerMoveKey} ->  ");
-            }
-        }
-    }
-
-    Console.WriteLine($"Total Player Score: {totalPlayerScore}");
 }
 
 RoundOutcome GetRoundOutcomeBetweenTwoShapes(Shape opponent, Shape player)
