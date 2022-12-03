@@ -22,15 +22,12 @@ int CalculateTotalElfGroupPriority(string[] elves)
     {
         var groupOfThreeElfRucksacks = elves.Skip(i).Take(3);
         groupOfThreeElfRucksacks.Skip(1)
-        .Aggregate(
-            new HashSet<char>(groupOfThreeElfRucksacks.First()),
-            (commonGroupItems, nextElfRucksackInGroup) =>
+        .Aggregate(new HashSet<char>(groupOfThreeElfRucksacks.First()), (commonGroupItems, nextElfRucksackInGroup) =>
             {
                 commonGroupItems.IntersectWith(nextElfRucksackInGroup);
                 if (commonGroupItems.Count == 1) priority += CalculateCharacterPriority(commonGroupItems.First());
                 return commonGroupItems;
-            }
-        );
+            });
     }
 
     return priority;
