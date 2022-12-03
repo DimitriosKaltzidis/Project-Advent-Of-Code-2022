@@ -8,8 +8,8 @@ int CalculateTotalElfCommonItemPriority(string[] elves)
     {
         var firstCompartmentOfRucksack = elf.Substring(0, (int)(elf.Length / 2));
         var secondCompartmentOfRucksack = elf.Substring((int)(elf.Length / 2), (int)(elf.Length / 2));
-        var commonItem = firstCompartmentOfRucksack.Intersect(secondCompartmentOfRucksack).FirstOrDefault();
-        priority += CalculateCharacterPriority(commonItem);
+        var rucksackCommonItem = firstCompartmentOfRucksack.Intersect(secondCompartmentOfRucksack).FirstOrDefault();
+        priority += CalculateCharacterPriority(rucksackCommonItem);
     }
 
     return priority;
@@ -20,15 +20,15 @@ int CalculateTotalElfGroupPriority(string[] elves)
     var priority = 0;
     for (int i = 0; i < elves.Length; i = i + 3)
     {
-        var group = elves.Skip(i).Take(3);
-        group.Skip(1)
+        var groupOfThreeElfRucksacks = elves.Skip(i).Take(3);
+        groupOfThreeElfRucksacks.Skip(1)
         .Aggregate(
-            new HashSet<char>(group.First()),
-            (h, e) =>
+            new HashSet<char>(groupOfThreeElfRucksacks.First()),
+            (commonGroupItems, nextElfRucksackInGroup) =>
             {
-                h.IntersectWith(e);
-                if (h.Count == 1) priority += CalculateCharacterPriority(h.First());
-                return h;
+                commonGroupItems.IntersectWith(nextElfRucksackInGroup);
+                if (commonGroupItems.Count == 1) priority += CalculateCharacterPriority(commonGroupItems.First());
+                return commonGroupItems;
             }
         );
     }
