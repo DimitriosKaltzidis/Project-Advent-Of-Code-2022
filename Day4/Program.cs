@@ -1,5 +1,5 @@
 ﻿string[] pairsOfElves = File.ReadAllLines(@"dayfour.txt");
-var fullyOverRangeCounter = 0;
+var fullyOverlapRangeCounter = 0;
 var overlapRangeCounter = 0;
 
 foreach (var pairOfElves in pairsOfElves)
@@ -10,10 +10,10 @@ foreach (var pairOfElves in pairsOfElves)
     var elfOneRange = new Range(int.Parse(elfOneRangeLimits[0]), int.Parse(elfOneRangeLimits[1]));
     var elfTwoRange = new Range(int.Parse(elfTwoRangeLimits[0]), int.Parse(elfTwoRangeLimits[1]));
     if (DoRangesOverlap(elfOneRange, elfTwoRange)) overlapRangeCounter++;
-    if (DoRangesFullyOverlap(elfOneRange, elfTwoRange)) fullyOverRangeCounter++;
+    if (DoRangesFullyOverlap(elfOneRange, elfTwoRange)) fullyOverlapRangeCounter++;
 }
 
-Console.WriteLine($"Part One: {fullyOverRangeCounter} - Part Two: {overlapRangeCounter}");
+Console.WriteLine($"Part One: {fullyOverlapRangeCounter} - Part Two: {overlapRangeCounter}");
 Console.ReadLine();
 
 bool DoRangesOverlap(Range firstRange, Range secondRange)
