@@ -14,7 +14,6 @@ foreach (var pairOfElves in pairsOfElves)
 }
 
 Console.WriteLine($"Part One: {fullyOverlapRangeCounter} - Part Two: {overlapRangeCounter}");
-Console.ReadLine();
 
 bool DoRangesOverlap(Range firstRange, Range secondRange)
 {
