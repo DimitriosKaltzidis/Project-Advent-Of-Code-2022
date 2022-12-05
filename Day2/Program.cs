@@ -18,7 +18,7 @@ var moveGuideDictionary = new Dictionary<string, RoundOutcome>()
 int totalPlayerScorePartOne = 0;
 int totalPlayerScorePartTwo = 0;
 
-foreach (var line in File.ReadAllLines(@"dayTwo.txt"))
+foreach (var line in File.ReadAllLines(@"day2.txt"))
 {
     var moves = line.Split(' ');
     totalPlayerScorePartOne += CalculateScore(moves[0], moves[1]);

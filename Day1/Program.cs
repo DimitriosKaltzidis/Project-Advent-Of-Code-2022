@@ -1,5 +1,5 @@
 ﻿var elves = new List<int>();
-string[] lines = File.ReadAllLines(@"dayone.txt");
+string[] lines = File.ReadAllLines(@"day1.txt");
 
 var elfCalorieCounter = 0;
 

@@ -1,4 +1,4 @@
-﻿var elves = File.ReadAllLines(@"daythree.txt");
+﻿var elves = File.ReadAllLines(@"day3.txt");
 Console.WriteLine($"Part One {CalculateTotalElfCommonItemPriority(elves)} - Part Two {CalculateTotalElfGroupPriority(elves)}");
 
 int CalculateTotalElfCommonItemPriority(string[] elves)

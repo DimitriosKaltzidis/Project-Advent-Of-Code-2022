@@ -1,4 +1,4 @@
-﻿string[] pairsOfElves = File.ReadAllLines(@"dayfour.txt");
+﻿string[] pairsOfElves = File.ReadAllLines(@"day4.txt");
 var fullyOverlapRangeCounter = 0;
 var overlapRangeCounter = 0;
 
