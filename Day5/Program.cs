@@ -1,44 +1,37 @@
 ﻿using System.Text.RegularExpressions;
-
-var listOfStacks = new List<Stack<string>>();
 var loadingProgram = File.ReadAllLines(@"day5.txt").ToList();
-var indexOfCrateAndInstrunctionSeperator = loadingProgram.IndexOf(string.Empty);
-var calculatePartTwo = false; // Change to true to calculate second part answer
+Console.WriteLine($"Part One: {CalculateTopStackItems(loadingProgram)} - Part Two: {CalculateTopStackItems(loadingProgram, true)}");
 
-for (int i = indexOfCrateAndInstrunctionSeperator - 2; i >= 0; i--)
+string CalculateTopStackItems(List<string> loadingProgram, bool isCrateMover9001 = false)
 {
-    var itemsPerStackLayer = loadingProgram[i].Replace("[", " ").Replace("]", " ").Split("   ");
+    var crateStacks = new List<Stack<string>>();
+    var indexOfCrateStackAndLoadingInstrunctionSeperator = loadingProgram.IndexOf(string.Empty);
 
-    // Shitty fix becuase of incrorrent splitting above so.. just to get an answer skip the first position
-    if (itemsPerStackLayer.Length > 9) itemsPerStackLayer = itemsPerStackLayer.Skip(1).ToArray();
-    if (listOfStacks.Count == 0) foreach (var item in itemsPerStackLayer) { listOfStacks.Add(new Stack<string>()); }
-
-    for (int j = 0; j < itemsPerStackLayer.Length; j++)
+    for (int i = indexOfCrateStackAndLoadingInstrunctionSeperator - 2; i >= 0; i--) // We read crate stacks from bottom to top
     {
-        var item = itemsPerStackLayer[j].Replace(" ", string.Empty);
-        if (!string.IsNullOrEmpty(item)) listOfStacks[j].Push(item);
+        var suppliesPerCrateStackLayer = loadingProgram[i].Replace("] ", "]").Replace("   ", "-").Replace("[", string.Empty).Replace("]", string.Empty).Replace(" ", string.Empty);
+
+        if (crateStacks.Count == 0) foreach (var item in suppliesPerCrateStackLayer) { crateStacks.Add(new Stack<string>()); }
+
+        for (int j = 0; j < suppliesPerCrateStackLayer.Length; j++)
+        {
+            var item = suppliesPerCrateStackLayer[j].ToString();
+            if (item != "-") crateStacks[j].Push(item);
+        }
     }
+
+    for (var i = indexOfCrateStackAndLoadingInstrunctionSeperator + 1; i < loadingProgram.Count; i++)
+    {
+        var loadingInstructionFirstPart = Regex.Replace(loadingProgram[i].Split("from")[0], @"[^\d]", "");
+        var loadingInstructionSecondPart = Regex.Replace(loadingProgram[i].Split("from")[1], @"[^\d]", "");
+        var crateStackToRemoveFrom = crateStacks[int.Parse(loadingInstructionSecondPart[0].ToString()) - 1];
+        var crateStackToAddTo = crateStacks[int.Parse(loadingInstructionSecondPart[1].ToString()) - 1];
+        var suppliesToBeMoved = new List<string>();
+
+        for (var j = 0; j < int.Parse(loadingInstructionFirstPart.ToString()); j++) suppliesToBeMoved.Add(crateStackToRemoveFrom.Pop());
+        if (isCrateMover9001) suppliesToBeMoved.Reverse();
+        foreach (var supply in suppliesToBeMoved) crateStackToAddTo.Push(supply);
+    }
+
+    return string.Join(string.Empty, crateStacks.Select(x => x.First()));
 }
-
-for (var i = indexOfCrateAndInstrunctionSeperator + 1; i < loadingProgram.Count; i++)
-{
-    var instructionFirstPart = Regex.Replace(loadingProgram[i].Split("from")[0], @"[^\d]", "");
-    var instructionSecondPart = Regex.Replace(loadingProgram[i].Split("from")[1], @"[^\d]", "");
-    var crateToRemoveFrom = listOfStacks[int.Parse(instructionSecondPart[0].ToString()) - 1];
-    var crateToAddTo = listOfStacks[int.Parse(instructionSecondPart[1].ToString()) - 1];
-    var removedCrateItems = new List<string>();
-
-    for (var j = 0; j < int.Parse(instructionFirstPart.ToString()); j++)
-    {
-        removedCrateItems.Add(crateToRemoveFrom.Pop());
-    }
-
-    if (calculatePartTwo) removedCrateItems.Reverse();
-
-    foreach (var it in removedCrateItems)
-    {
-        crateToAddTo.Push(it);
-    }
-}
-
-foreach (var item in listOfStacks) Console.Write(item.First());
