@@ -3,14 +3,14 @@
 var listOfStacks = new List<Stack<string>>();
 var loadingProgram = File.ReadAllLines(@"day5.txt").ToList();
 var indexOfCrateAndInstrunctionSeperator = loadingProgram.IndexOf(string.Empty);
-var calculatePartTwo = false;
+var calculatePartTwo = false; // Change to true to calculate second part answer
 
-for (int i = indexOfCrateAndInstrunctionSeperator - 2; i >= 0 ; i--)
+for (int i = indexOfCrateAndInstrunctionSeperator - 2; i >= 0; i--)
 {
     var itemsPerStackLayer = loadingProgram[i].Replace("[", " ").Replace("]", " ").Split("   ");
-    
+
     // Shitty fix becuase of incrorrent splitting above so.. just to get an answer skip the first position
-    if(itemsPerStackLayer.Length > 9) itemsPerStackLayer = itemsPerStackLayer.Skip(1).ToArray();
+    if (itemsPerStackLayer.Length > 9) itemsPerStackLayer = itemsPerStackLayer.Skip(1).ToArray();
     if (listOfStacks.Count == 0) foreach (var item in itemsPerStackLayer) { listOfStacks.Add(new Stack<string>()); }
 
     for (int j = 0; j < itemsPerStackLayer.Length; j++)
@@ -32,16 +32,13 @@ for (var i = indexOfCrateAndInstrunctionSeperator + 1; i < loadingProgram.Count;
     {
         removedCrateItems.Add(crateToRemoveFrom.Pop());
     }
-    
-    if(calculatePartTwo) removedCrateItems.Reverse();
-    
+
+    if (calculatePartTwo) removedCrateItems.Reverse();
+
     foreach (var it in removedCrateItems)
     {
         crateToAddTo.Push(it);
     }
 }
 
-foreach(var item in listOfStacks)
-{
-    Console.Write(item.First());
-}
+foreach (var item in listOfStacks) Console.Write(item.First());
