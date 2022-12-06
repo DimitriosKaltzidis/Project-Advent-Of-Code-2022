@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="dayone.txt" />
+    <None Remove="day1.txt" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="dayone.txt">
+    <Content Include="day1.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
