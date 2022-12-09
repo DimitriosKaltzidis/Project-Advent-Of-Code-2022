@@ -51,17 +51,8 @@ void EmulateRopeMovement(string[] ropeMoves, Bridge bridge)
 {
     var headHorizontalPosition = bridge.StartPositionColumn;
     var headVerticalPosition = bridge.StartPositionRow;
-   
     var tailHorizontalPosition = bridge.StartPositionColumn;
     var tailVerticalPosition = bridge.StartPositionRow;
-
-    var ropeKnots = new List<Tuple<int,int>>();
-
-    // Create knots
-    for(int i = 0; i< 9; i++)
-    {
-        ropeKnots.Add(new Tuple<int, int>(bridge.StartPositionColumn, bridge.StartPositionRow));
-    }
 
     foreach (var move in ropeMoves)
     {
@@ -70,15 +61,12 @@ void EmulateRopeMovement(string[] ropeMoves, Bridge bridge)
 
         for (int i = 0; i < moveSteps; i++)
         {
-            MoveHead(ref headHorizontalPosition, ref headVerticalPosition, 1, moveDirection);
             var headPreviousHorizontalPosition = headHorizontalPosition;
             var headPreviousVerticalPosition = headVerticalPosition;
-            
-            foreach(var ropeKnot in ropeKnots)
-            {
 
-            }
-            
+            MoveHead(ref headHorizontalPosition, ref headVerticalPosition, 1, moveDirection);
+
+
             MoveTail(headHorizontalPosition, headVerticalPosition, ref tailHorizontalPosition, ref tailVerticalPosition, headPreviousHorizontalPosition, headPreviousVerticalPosition);
             bridge.BridgeMap[tailVerticalPosition, tailHorizontalPosition] = '#';
         }
