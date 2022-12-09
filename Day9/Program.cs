@@ -1,9 +1,7 @@
 ﻿var ropeMoves = File.ReadAllLines(@"day9.txt");
 var bridge = CalculateBridge(ropeMoves);
-PrintBridge(bridge.BridgeMap);
-EmulateRopeMovement(ropeMoves, bridge);
-Console.ReadLine();
-
+Console.WriteLine($"Part One: {EmulateRopeMovement(ropeMoves, bridge)}");
+Console.WriteLine($"Part Two: {EmulateRopeMovement(ropeMoves, bridge, 9)}");
 
 Bridge CalculateBridge(string[] ropeMoves)
 {
@@ -47,12 +45,17 @@ Bridge CalculateBridge(string[] ropeMoves)
     return bridge;
 }
 
-void EmulateRopeMovement(string[] ropeMoves, Bridge bridge)
+int EmulateRopeMovement(string[] ropeMoves, Bridge bridge, int numberOfRopeKnotsAfterHead = 1)
 {
     var headHorizontalPosition = bridge.StartPositionColumn;
     var headVerticalPosition = bridge.StartPositionRow;
-    var tailHorizontalPosition = bridge.StartPositionColumn;
-    var tailVerticalPosition = bridge.StartPositionRow;
+
+    var ropeKnots = new List<Position>();
+
+    for (int i = 0; i < numberOfRopeKnotsAfterHead; i++)
+    {
+        ropeKnots.Add(new Position(bridge.StartPositionColumn, bridge.StartPositionRow));
+    }
 
     foreach (var move in ropeMoves)
     {
@@ -61,42 +64,146 @@ void EmulateRopeMovement(string[] ropeMoves, Bridge bridge)
 
         for (int i = 0; i < moveSteps; i++)
         {
-            var headPreviousHorizontalPosition = headHorizontalPosition;
-            var headPreviousVerticalPosition = headVerticalPosition;
-
             MoveHead(ref headHorizontalPosition, ref headVerticalPosition, 1, moveDirection);
+            var previousKnotCurrentHorizontalPosition = headHorizontalPosition;
+            var previousKnotCurrentVerticalPosition = headVerticalPosition;
 
+            foreach (var ropeKnot in ropeKnots)
+            {
+                var currentKnotHorizontalPosition = ropeKnot.HorizontalPosition;
+                var currentKnotVerticalPosition = ropeKnot.VerticalPosition;
+                MoveKnot(previousKnotCurrentHorizontalPosition, previousKnotCurrentVerticalPosition, ref currentKnotHorizontalPosition, ref currentKnotVerticalPosition, bridge);
 
-            MoveTail(headHorizontalPosition, headVerticalPosition, ref tailHorizontalPosition, ref tailVerticalPosition, headPreviousHorizontalPosition, headPreviousVerticalPosition);
-            bridge.BridgeMap[tailVerticalPosition, tailHorizontalPosition] = '#';
+                ropeKnot.HorizontalPosition = currentKnotHorizontalPosition;
+                ropeKnot.VerticalPosition = currentKnotVerticalPosition;
+                previousKnotCurrentHorizontalPosition = currentKnotHorizontalPosition;
+                previousKnotCurrentVerticalPosition = currentKnotVerticalPosition;
+                
+                if (ropeKnots.IndexOf(ropeKnot) == ropeKnots.Count -1) 
+                {
+                    bridge.BridgeMap[ropeKnot.VerticalPosition, ropeKnot.HorizontalPosition] = '#';
+                }
+            }
         }
     }
 
-    PrintBridge(bridge.BridgeMap);
+    return PrintBridge(bridge.BridgeMap);
 }
 
-void MoveTail(int headHorizontalPosition, int headVerticalPosition, ref int tailHorizontalPosition, ref int tailVerticalPosition, int headPreviousHorizontalPosition, int headPreviousVerticalPosition)
+void MoveKnot(int previousKnotCurrentHorizontalPosition, int previousKnotCurrentVerticalPosition, ref int currentKnotHorizontalPosition, ref int currentKnotVerticalPosition, Bridge bridge)
 {
-    var distanceBetweenTailAndHead = Math.Abs(tailHorizontalPosition - headHorizontalPosition) + Math.Abs(tailVerticalPosition - headVerticalPosition);
+    var distanceBetweenCurrentKnotAndPreviousKnot = Math.Abs(currentKnotHorizontalPosition - previousKnotCurrentHorizontalPosition) + Math.Abs(currentKnotVerticalPosition - previousKnotCurrentVerticalPosition);
 
-    if (headHorizontalPosition != tailHorizontalPosition && headVerticalPosition != tailVerticalPosition)
+    if (previousKnotCurrentHorizontalPosition != currentKnotHorizontalPosition && previousKnotCurrentVerticalPosition != currentKnotVerticalPosition) // We are diagonaly positioned
     {
-        // We are diagonal positioned
-        if(distanceBetweenTailAndHead > 2)
+        if (distanceBetweenCurrentKnotAndPreviousKnot > 2)
         {
-            tailHorizontalPosition = headPreviousHorizontalPosition;
-            tailVerticalPosition = headPreviousVerticalPosition;
+            MoveKnotDiagonally(new Position(previousKnotCurrentHorizontalPosition, previousKnotCurrentVerticalPosition), ref currentKnotHorizontalPosition, ref currentKnotVerticalPosition, bridge);
         }
     }
-    else
-    {
-        // We are on the same row or column
-        if (distanceBetweenTailAndHead > 1)
+    else // We are on the same row or column
+    {   
+        if (distanceBetweenCurrentKnotAndPreviousKnot > 1)
         {
-            tailHorizontalPosition = headPreviousHorizontalPosition;
-            tailVerticalPosition = headPreviousVerticalPosition;
+            MoveKnotHorizontallyOrVertically(new Position(previousKnotCurrentHorizontalPosition, previousKnotCurrentVerticalPosition), ref currentKnotHorizontalPosition, ref currentKnotVerticalPosition, bridge);
         }
     }
+}
+
+void MoveKnotHorizontallyOrVertically(Position previousKnot, ref int currentKnotHorizontalPosition, ref int currentKnotVerticalPosition, Bridge bridge)
+{
+    var possiblehorizontalAndVerticalPositions = CalculatePossibleHorizontalAndVerticalPositions(currentKnotHorizontalPosition, currentKnotVerticalPosition, bridge.BridgeMap.GetLength(0), bridge.BridgeMap.GetLength(1));
+    var distancesPerPosition = new List<Tuple<int, Position>>();
+
+    foreach (var possiblePosition in possiblehorizontalAndVerticalPositions)
+    {
+        distancesPerPosition.Add(new Tuple<int, Position>(CalculateDistanceBetweenTwoPositions(possiblePosition, previousKnot), possiblePosition));
+    }
+
+    var closerToPreviousKnotPosition = distancesPerPosition.MinBy(x => x.Item1).Item2;
+
+    currentKnotHorizontalPosition = closerToPreviousKnotPosition.HorizontalPosition;
+    currentKnotVerticalPosition = closerToPreviousKnotPosition.VerticalPosition;
+}
+
+void MoveKnotDiagonally(Position previousKnot, ref int currentKnotHorizontalPosition, ref int currentKnotVerticalPosition, Bridge bridge)
+{
+    var possibleDiagonalPositions = CalculatePossibleDiagonalPositions(currentKnotHorizontalPosition, currentKnotVerticalPosition, bridge.BridgeMap.GetLength(0), bridge.BridgeMap.GetLength(1));
+    var distancesPerPosition = new List<Tuple<int, Position>>();
+
+    foreach(var possiblePosition in possibleDiagonalPositions)
+    {
+        distancesPerPosition.Add(new Tuple<int, Position>(CalculateDistanceBetweenTwoPositions(possiblePosition, previousKnot), possiblePosition));
+    }
+
+    var closerToPreviousKnotPosition = distancesPerPosition.MinBy(x=>x.Item1).Item2;
+
+    currentKnotHorizontalPosition = closerToPreviousKnotPosition.HorizontalPosition;
+    currentKnotVerticalPosition = closerToPreviousKnotPosition.VerticalPosition;
+}
+
+List<Position> CalculatePossibleDiagonalPositions(int currentKnotHorizontalPosition, int currentKnotVerticalPosition, int maxBridgeMapHorizontalPosition, int maxBridgeVerticalPosition)
+{
+    var possibleDiagonalPositions = new List<Position>();
+    var upLeftHorizontalPosition = currentKnotHorizontalPosition - 1;
+    var upLeftVerticalPosition = currentKnotVerticalPosition - 1;
+    possibleDiagonalPositions.Add(new Position(upLeftHorizontalPosition, upLeftVerticalPosition));
+
+    var upRightHorizontalPosition = currentKnotHorizontalPosition - 1;
+    var upRightVerticalPosition = currentKnotVerticalPosition + 1;
+    possibleDiagonalPositions.Add(new Position(upRightHorizontalPosition, upRightVerticalPosition));
+
+    var bottomLeftHorizontalPosition = currentKnotHorizontalPosition + 1;
+    var bottomLeftVerticalPosition = currentKnotVerticalPosition - 1;
+    possibleDiagonalPositions.Add(new Position(bottomLeftHorizontalPosition, bottomLeftVerticalPosition));
+
+    var bottomRightHorizontalPosition = currentKnotHorizontalPosition + 1;
+    var bottomRightVerticalPosition = currentKnotVerticalPosition + 1;
+    possibleDiagonalPositions.Add(new Position(bottomRightHorizontalPosition, bottomRightVerticalPosition));
+
+    return possibleDiagonalPositions.Where(x => !IsPositionOutsideOfBridge(x, maxBridgeMapHorizontalPosition, maxBridgeVerticalPosition)).ToList();
+}
+
+List<Position> CalculatePossibleHorizontalAndVerticalPositions(int currentKnotHorizontalPosition, int currentKnotVerticalPosition, int maxBridgeMapHorizontalPosition, int maxBridgeVerticalPosition)
+{
+    var possibleVerticalAndHorizontalPositions = new List<Position>();
+    var leftHorizontalPosition = currentKnotHorizontalPosition;
+    var leftVerticalPosition = currentKnotVerticalPosition - 1;
+    possibleVerticalAndHorizontalPositions.Add(new Position(leftHorizontalPosition, leftVerticalPosition));
+
+    var upHorizontalPosition = currentKnotHorizontalPosition - 1;
+    var upVerticalPosition = currentKnotVerticalPosition;
+    possibleVerticalAndHorizontalPositions.Add(new Position(upHorizontalPosition, upVerticalPosition));
+
+    var bottomHorizontalPosition = currentKnotHorizontalPosition + 1;
+    var bottomVerticalPosition = currentKnotVerticalPosition;
+    possibleVerticalAndHorizontalPositions.Add(new Position(bottomHorizontalPosition, bottomVerticalPosition));
+
+    var rightHorizontalPosition = currentKnotHorizontalPosition;
+    var rightVerticalPosition = currentKnotVerticalPosition + 1;
+    possibleVerticalAndHorizontalPositions.Add(new Position(rightHorizontalPosition, rightVerticalPosition));
+
+    return possibleVerticalAndHorizontalPositions.Where(x => !IsPositionOutsideOfBridge(x, maxBridgeMapHorizontalPosition, maxBridgeVerticalPosition)).ToList();
+}
+
+bool IsPositionOutsideOfBridge(Position position, int maxBridgeMapHorizontalPosition, int maxBridgeVerticalPosition)
+{
+    if(position.VerticalPosition < 0 || position.VerticalPosition > maxBridgeMapHorizontalPosition)
+    {
+        return true;
+    }
+
+    if(position.HorizontalPosition < 0 || position.HorizontalPosition > maxBridgeVerticalPosition)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+int CalculateDistanceBetweenTwoPositions(Position positionA, Position positionB)
+{
+    return Math.Abs(positionA.HorizontalPosition - positionB.HorizontalPosition) + Math.Abs(positionA.VerticalPosition - positionB.VerticalPosition);
 }
 
 void MoveHead(ref int horizontalPosition, ref int verticalPosition, int steps, string direction)
@@ -105,24 +212,24 @@ void MoveHead(ref int horizontalPosition, ref int verticalPosition, int steps, s
     {
         case "R":
         case "L":
-            horizontalPosition = MoveHorizontally(horizontalPosition, steps, direction);
+            horizontalPosition = MoveHeadHorizontally(horizontalPosition, steps, direction);
             break;
         case "U":
         case "D":
-            verticalPosition = MoveVertically(verticalPosition, steps, direction);
+            verticalPosition = MoveHeadVertically(verticalPosition, steps, direction);
             break;
         default:
             throw new NotImplementedException();
     }
 }
 
-int MoveHorizontally(int start, int steps, string direction)
+int MoveHeadHorizontally(int start, int steps, string direction)
 {
     if (direction == "R") return start + steps;
     else return start - steps;
 }
 
-int MoveVertically(int start, int steps, string direction)
+int MoveHeadVertically(int start, int steps, string direction)
 {
     if (direction == "U") return start - steps;
     else return start + steps;
@@ -131,12 +238,12 @@ int MoveVertically(int start, int steps, string direction)
 int PrintBridge(char[,] matrix)
 {
     int counterOfTailPositionsVisitedAtLeastOnce = 0;
-    Console.Clear();
+
     for (int i = 0; i < matrix.GetLength(0); i++)
     {
         for (int j = 0; j < matrix.GetLength(1); j++)
         {
-            if(matrix[i, j] == '#')
+            if (matrix[i, j] == '#')
             {
                 counterOfTailPositionsVisitedAtLeastOnce++;
             }
@@ -145,7 +252,8 @@ int PrintBridge(char[,] matrix)
         }
         Console.WriteLine();
     }
-    Console.WriteLine(counterOfTailPositionsVisitedAtLeastOnce);
+
+    FillBridge(bridge, '.');
 
     return counterOfTailPositionsVisitedAtLeastOnce;
 }
@@ -162,8 +270,21 @@ void FillBridge(Bridge bridge, char characterToFillBridgeWith)
                 bridge.BridgeMap[i, j] = 's';
             }
         }
-
     }
 }
 
 record Bridge(char[,] BridgeMap, int StartPositionRow, int StartPositionColumn);
+
+class Position
+{
+
+    public Position(int horizontalPosition, int verticalPosition)
+    {
+        HorizontalPosition = horizontalPosition;
+        VerticalPosition = verticalPosition;
+    }
+
+    public int HorizontalPosition { get; set; }
+
+    public int VerticalPosition { get; set; }
+}
