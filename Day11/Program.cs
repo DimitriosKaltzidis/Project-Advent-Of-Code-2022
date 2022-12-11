@@ -1,38 +1,32 @@
 ﻿using System.Text.RegularExpressions;
-var monkeyProperties = File.ReadAllLines(@"testdata.txt").ToList();
-var troopOfMonkeys = InitializeMonkeyTroopFromFile(monkeyProperties);
-var maxRounds = 20;
+var monkeyProperties = File.ReadAllLines(@"day11.txt").ToList();
+var partOne = CalculateMonkeyBusiness(monkeyProperties, 20, true);
+var partTwo = CalculateMonkeyBusiness(monkeyProperties, 10000);
 
-for (int i = 0; i < maxRounds; i++)
-{
-    //Console.WriteLine($"--- Start Of Round {i + 1} ---");
-
-    foreach (var monkey in troopOfMonkeys)
-    {
-        var itemTranfersToOtherMonkeys = monkey.InspectAndGiveItemsToOtherMokeys();
-
-        foreach (var transfer in itemTranfersToOtherMonkeys)
-        {
-            var targetMonkey = troopOfMonkeys.First(x => x.Id == transfer.MonkeyIdToGiveItemTo);
-            targetMonkey.CatchThrownItem(transfer.Item);
-            //Console.WriteLine($"\nMonkey {monkey.Id} threw item {transfer.Item} to Monkey {targetMonkey.Id}");
-        }
-
-        //Console.WriteLine($"\n\n{monkey.StolenRucksackItems.Count} stolen items in Monkey {monkey.Id}\n");
-    }
-
-    Console.WriteLine($"--- End Of Round {i + 1} ---");
-
-    foreach (var monkey in troopOfMonkeys)
-    {
-        monkey.PrintTotalItemsInspected();
-    }
-}
-
-
-
-Console.WriteLine($"Part One: {troopOfMonkeys.Select(x => x.TotalItemsInspected).OrderByDescending(x => x).Take(2).Aggregate((a, b) => a * b)}");
+Console.WriteLine($"Part One: {partOne} - Part Two: {partTwo}");
 Console.ReadLine();
+
+long CalculateMonkeyBusiness(List<string> monkeyCharacteristics, int maxRounds, bool calculateWithRelief = false)
+{
+    var troopOfMonkeys = InitializeMonkeyTroopFromFile(monkeyProperties);
+    var factor = troopOfMonkeys.Aggregate((long)1, (c, monkey) => c * monkey.TestDivisionNumber);
+
+    for (int i = 0; i < maxRounds; i++)
+    {
+        foreach (var monkey in troopOfMonkeys)
+        {
+            var itemTranfersToOtherMonkeys = calculateWithRelief ? monkey.InspectAndGiveItemsToOtherMokeys(null) : monkey.InspectAndGiveItemsToOtherMokeys(factor);
+
+            foreach (var transfer in itemTranfersToOtherMonkeys)
+            {
+                var targetMonkey = troopOfMonkeys.First(x => x.Id == transfer.MonkeyIdToGiveItemTo);
+                targetMonkey.CatchThrownItem(transfer.Item);
+            }
+        }
+    }
+
+    return troopOfMonkeys.Select(x => x.TotalItemsInspected).OrderByDescending(x => x).Take(2).Aggregate((a, b) => a * b);
+}
 
 List<Monkey> InitializeMonkeyTroopFromFile(List<string> fileLines)
 {
@@ -42,12 +36,12 @@ List<Monkey> InitializeMonkeyTroopFromFile(List<string> fileLines)
     foreach (var monkeyId in monkeyIds)
     {
         var indexOfMonkeyId = fileLines.IndexOf(monkeyId);
-        var id = GetIntegerOnly(monkeyId.Split(' ')[1]);
-        var startingItems = fileLines[indexOfMonkeyId + 1].Split(":")[1].Replace(" ", string.Empty).Trim().Split(",").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => (ulong)GetIntegerOnly(x)).ToList();
+        var id = int.Parse(GetOnlyNumberPart(monkeyId.Split(' ')[1]));
+        var startingItems = fileLines[indexOfMonkeyId + 1].Split(":")[1].Replace(" ", string.Empty).Trim().Split(",").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => long.Parse(GetOnlyNumberPart(x))).ToList();
         var operation = GetOperation(fileLines[indexOfMonkeyId + 2]);
-        var testDivisionNumber = ulong.Parse(Regex.Replace(fileLines[indexOfMonkeyId + 3], @"[^\d]", string.Empty));
-        var successfullTestMonkeyId = GetIntegerOnly(fileLines[indexOfMonkeyId + 4]);
-        var notSuccessfullTestMonkeyId = GetIntegerOnly(fileLines[indexOfMonkeyId + 5]);
+        var testDivisionNumber = long.Parse(Regex.Replace(fileLines[indexOfMonkeyId + 3], @"[^\d]", string.Empty));
+        var successfullTestMonkeyId = int.Parse(GetOnlyNumberPart(fileLines[indexOfMonkeyId + 4]));
+        var notSuccessfullTestMonkeyId = int.Parse(GetOnlyNumberPart(fileLines[indexOfMonkeyId + 5]));
 
         monkeys.Add(new Monkey(id: id, testDivisionNumber: testDivisionNumber, successfullTestMonkeyId: successfullTestMonkeyId, notSuccessfullTestMonkeyId: notSuccessfullTestMonkeyId, operation, startingItems: startingItems));
     }
@@ -55,7 +49,7 @@ List<Monkey> InitializeMonkeyTroopFromFile(List<string> fileLines)
     return monkeys;
 }
 
-Func<ulong, ulong> GetOperation(string line)
+Func<long, long> GetOperation(string line)
 {
     var operationPart = line.Replace(" ", string.Empty).Trim().Split('=')[1].Trim();
 
@@ -63,24 +57,24 @@ Func<ulong, ulong> GetOperation(string line)
     {
         var elementsOfOperation = operationPart.Split('+');
         var secondOperant = elementsOfOperation[1];
-        return secondOperant == "old" ? x => x + x : x => x + (ulong)GetIntegerOnly(secondOperant);
+        return secondOperant == "old" ? (x) => (x + x) : (x) => (x + long.Parse(GetOnlyNumberPart(secondOperant)));
     }
     else
     {
         var elementsOfOperation = operationPart.Split('*');
         var secondOperant = elementsOfOperation[1];
-        return secondOperant == "old" ? x => x * x : x => x * (ulong)GetIntegerOnly(secondOperant);
+        return secondOperant == "old" ? (x) => (x * x) : (x) => (x * long.Parse(GetOnlyNumberPart(secondOperant)));
     }
 }
 
-int GetIntegerOnly(string line)
+string GetOnlyNumberPart(string line)
 {
-    return int.Parse(Regex.Replace(line, @"[^\d]", ""));
+    return Regex.Replace(line, @"[^\d]", "");
 }
 
 class Monkey
 {
-    public Monkey(int id, ulong testDivisionNumber, int successfullTestMonkeyId, int notSuccessfullTestMonkeyId, Func<ulong, ulong> worryLevelOperation, List<ulong> startingItems)
+    public Monkey(int id, long testDivisionNumber, int successfullTestMonkeyId, int notSuccessfullTestMonkeyId, Func<long, long> worryLevelOperation, List<long> startingItems)
     {
         this.Id = id;
         this.TestDivisionNumber = testDivisionNumber;
@@ -92,58 +86,50 @@ class Monkey
 
     public int Id { get; set; }
 
-    public ulong TestDivisionNumber { get; set; }
+    public long TestDivisionNumber { get; set; }
 
     public int MonkeyIdForAnItemToBeThrownIfTestIsSuccessfull { get; set; }
 
     public int MonkeyIdForAnItemToBeThrownIfTestIsNotSuccessfull { get; set; }
 
-    public List<ulong> StolenRucksackItems { get; set; } = new List<ulong>();
+    public List<long> StolenRucksackItems { get; set; } = new List<long>();
 
-    public ulong TotalItemsInspected { get; set; } = 0;
+    public long TotalItemsInspected { get; set; } = 0;
 
-    private Func<ulong, ulong> WorryLevelOperation;
+    private Func<long, long> WorryLevelOperation;
 
-    //private Func<ulong, ulong, int, int, int> IsDivisable = (item, divisionNumber, successFullTestMonkeyId, notSuccessFullTestMonkeyId) => { return item % divisionNumber == 0 ? successFullTestMonkeyId : notSuccessFullTestMonkeyId; };
-
-    public List<ItemTransfer> InspectAndGiveItemsToOtherMokeys()
+    public List<ItemTransfer> InspectAndGiveItemsToOtherMokeys(long? factor = null)
     {
         var itemsToGive = new List<ItemTransfer>();
 
-        if(Id == 3)
-        {
-
-        }
-
         for (int i = 0; i < StolenRucksackItems.Count; i++)
         {
-            var hasMoreItemsToThrow = CalculateWorryLevelAndDestinationMonkeyOfItemHeld(i, out var transfer);
+            var hasMoreItemsToThrow = CalculateWorryLevelAndDestinationMonkeyOfItemHeld(i, out var transfer, factor);
 
             if (hasMoreItemsToThrow) itemsToGive.Add(transfer);
-            else Console.WriteLine("ELSE");
         }
 
         StolenRucksackItems.Clear();
         return itemsToGive;
     }
 
-    private bool CalculateWorryLevelAndDestinationMonkeyOfItemHeld(int itemPosition, out ItemTransfer itemTransfer)
+    private bool CalculateWorryLevelAndDestinationMonkeyOfItemHeld(int itemPosition, out ItemTransfer itemTransfer, long? factor = null)
     {
         itemTransfer = new ItemTransfer();
 
         if (this.StolenRucksackItems != null && this.StolenRucksackItems.Count > 0)
         {
             var itemToInspect = this.StolenRucksackItems[itemPosition];
-            //Console.WriteLine($"Monkey {this.Id}:\n\tMonkey inspects an item with worry level of {itemToInspect}.");
             itemTransfer.Item = WorryLevelOperation(itemToInspect);
             TotalItemsInspected++;
-            //Console.WriteLine($"\tWorry level becomes {itemTransfer.Item}");
-            //var nonRoundedResult = itemTransfer.Item / 3d;
-            //itemTransfer.Item = (ulong)Math.Floor((decimal)nonRoundedResult);
-            //Console.WriteLine($"\tMonkey gets bored with item. Worry level is divided by 3 to {itemTransfer.Item}");
-            //-itemTransfer.MonkeyIdToGiveItemTo = IsDivisable(itemTransfer.Item, this.TestDivisionNumber, this.MonkeyIdForAnItemToBeThrownIfTestIsSuccessfull, MonkeyIdForAnItemToBeThrownIfTestIsNotSuccessfull);
+
+            if (factor != null)
+                itemTransfer.Item %= factor.Value;
+            else
+                itemTransfer.Item = (long)Math.Floor((decimal)(itemTransfer.Item / 3d));
+
             itemTransfer.MonkeyIdToGiveItemTo = itemTransfer.Item % TestDivisionNumber == 0 ? MonkeyIdForAnItemToBeThrownIfTestIsSuccessfull : MonkeyIdForAnItemToBeThrownIfTestIsNotSuccessfull;
-            //Console.WriteLine($"\tItem is thrown to monkey {itemTransfer.MonkeyIdToGiveItemTo}");
+            
             return true;
         }
 
@@ -156,20 +142,14 @@ class Monkey
         return false;
     }
 
-    public void CatchThrownItem(ulong item)
+    public void CatchThrownItem(long item)
     {
         StolenRucksackItems.Add(item);
-    }
-
-    public void PrintTotalItemsInspected()
-    {
-        Console.WriteLine($"Monkey {this.Id} inspected items {this.TotalItemsInspected} times.");
-        //Console.WriteLine($"Monkey {this.Id}: {string.Join(", ", StolenRucksackItems)}");
     }
 }
 
 class ItemTransfer
 {
     public int MonkeyIdToGiveItemTo { get; set; }
-    public ulong Item { get; set; }
+    public long Item { get; set; }
 }
