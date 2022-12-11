@@ -4,7 +4,6 @@ var partOne = CalculateMonkeyBusiness(monkeyProperties, 20, true);
 var partTwo = CalculateMonkeyBusiness(monkeyProperties, 10000);
 
 Console.WriteLine($"Part One: {partOne} - Part Two: {partTwo}");
-Console.ReadLine();
 
 long CalculateMonkeyBusiness(List<string> monkeyCharacteristics, int maxRounds, bool calculateWithRelief = false)
 {
