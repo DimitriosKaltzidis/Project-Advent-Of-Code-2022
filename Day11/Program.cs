@@ -38,7 +38,7 @@ List<Monkey> InitializeMonkeyTroopFromFile(List<string> fileLines)
         var id = int.Parse(GetOnlyNumberPart(monkeyId.Split(' ')[1]));
         var startingItems = fileLines[indexOfMonkeyId + 1].Split(":")[1].Replace(" ", string.Empty).Trim().Split(",").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => long.Parse(GetOnlyNumberPart(x))).ToList();
         var operation = GetOperation(fileLines[indexOfMonkeyId + 2]);
-        var testDivisionNumber = long.Parse(Regex.Replace(fileLines[indexOfMonkeyId + 3], @"[^\d]", string.Empty));
+        var testDivisionNumber = long.Parse(GetOnlyNumberPart(fileLines[indexOfMonkeyId + 3]));
         var successfullTestMonkeyId = int.Parse(GetOnlyNumberPart(fileLines[indexOfMonkeyId + 4]));
         var notSuccessfullTestMonkeyId = int.Parse(GetOnlyNumberPart(fileLines[indexOfMonkeyId + 5]));
 
