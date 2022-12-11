@@ -83,15 +83,15 @@ class Monkey
         this.StolenRucksackItems = startingItems;
     }
 
-    public int Id { get; set; }
+    public int Id { get; }
 
-    public long TestDivisionNumber { get; set; }
+    public long TestDivisionNumber { get; }
 
-    public int MonkeyIdForAnItemToBeThrownIfTestIsSuccessfull { get; set; }
+    private int MonkeyIdForAnItemToBeThrownIfTestIsSuccessfull { get; }
 
-    public int MonkeyIdForAnItemToBeThrownIfTestIsNotSuccessfull { get; set; }
+    private int MonkeyIdForAnItemToBeThrownIfTestIsNotSuccessfull { get; }
 
-    public List<long> StolenRucksackItems { get; set; } = new List<long>();
+    private List<long> StolenRucksackItems { get; set; } = new List<long>();
 
     public long TotalItemsInspected { get; set; } = 0;
 
@@ -128,7 +128,7 @@ class Monkey
                 itemTransfer.Item = (long)Math.Floor((decimal)(itemTransfer.Item / 3d));
 
             itemTransfer.MonkeyIdToGiveItemTo = itemTransfer.Item % TestDivisionNumber == 0 ? MonkeyIdForAnItemToBeThrownIfTestIsSuccessfull : MonkeyIdForAnItemToBeThrownIfTestIsNotSuccessfull;
-            
+
             return true;
         }
 
